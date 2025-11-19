@@ -2,6 +2,7 @@ import sys
 import sounddevice as sd
 import numpy as np
 import time
+from effects.echo import Echo
 
 # USE THIS TO FIND YOUR INPUT AND OUTPUT DEVICES
 # for i, dev in enumerate(sd.query_devices()):
@@ -64,6 +65,11 @@ def detect_pitch(x, samplerate):
     freq = samplerate / peak
     return freq
 
+echo = Echo(SAMPLERATE, delay_ms=250, decay=0.45, mix=0.7)
+_bar_green = "\033[32m█\033[0m"
+_bar_yellow = "\033[33m█\033[0m"
+_bar_red= "\033[31m█\033[0m"
+
 def cb(indata, outdata, frames, time, status):
     global print_counter
     global buffer_index
@@ -84,14 +90,24 @@ def cb(indata, outdata, frames, time, status):
         
     if print_counter % 150 == 0:
         # Convert to bar length (scale to 0–1 range)
-        level = min(0.5 * rms * 40, 1.0)   # adjust multiplier to taste
+        level = min(0.1 * rms * 40, 1.0)   # adjust multiplier to taste
 
         bar_length = 50
         filled = int(level * bar_length)
         empty = bar_length - filled
-        bar = "█" * filled + "░" * empty
+        
+        if level < 0.66:
+            colored = _bar_green
+        elif level < 0.88:
+            colored = _bar_yellow
+        else:
+            colored = _bar_red
+
+        bar = colored * filled + "░" * empty
 
         # Move cursor to start of line, print bar, flush immediately
+        sys.stdout.write("\033[?25l") # hide cursor
+        sys.stdout.write("\033[2J\033[H") # clear everything
         sys.stdout.write(bar + "\n")
 
         # Detect pitch
@@ -114,6 +130,8 @@ def cb(indata, outdata, frames, time, status):
     distorted = np.tanh(x)
     y = mix * distorted + (1 - mix) * indata[:, 0]
     
+    y = echo.process(y)
+
     outdata[:, 0] = y * VOLUME
 
 with sd.Stream(
