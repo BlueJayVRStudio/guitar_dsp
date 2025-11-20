@@ -7,9 +7,6 @@ from TkDial.tkdial.tkdial import Dial
 from threading import Lock
 
 volume_lock = Lock()
-echo_lock = Lock()
-echo_decay_lock = Lock()
-echo_mix_lock = Lock()
 
 input_devices = {}
 output_devices = {}
@@ -31,6 +28,9 @@ VOLUME = 0.2
 echo = Echo(SAMPLERATE, delay_ms=250, decay=0.45, mix=0.7)
 distortion = Distortion()
 console_visualizer = Visualizer()
+
+_stream = None
+initialized = False
 
 def cb(indata, outdata, frames, time, status):
     if status:
@@ -57,44 +57,6 @@ def on_echo_change(val):
 
 def on_echo_decay_change(val):
     echo.set_decay(val)
-
-customtkinter.set_appearance_mode("Dark") 
-
-app = customtkinter.CTk()
-app_w = 650
-app_h = 400
-screen_w = app.winfo_screenwidth()
-screen_h = app.winfo_screenheight()
-app.geometry(f"{app_w}x{app_h}+{screen_w//2 - app_w//2}+{screen_h//2 - app_h//2}")
-# app.geometry(f"450+100")
-app.title("Guitar DSP")
-
-app.grid_columnconfigure(0, weight=1)
-app.grid_columnconfigure(1, weight=0)
-app.grid_rowconfigure(0, weight=1)
-
-frame_1 = customtkinter.CTkFrame(master=app)
-frame_1.grid(row=0, column=0, rowspan=2, columnspan=1, padx=20, pady=20, sticky='nsew')
-
-frame_2 = customtkinter.CTkFrame(master=app)
-frame_2.grid(row=0, column=1, rowspan=1, columnspan=1, padx=20, pady=20, sticky='nsew')
-
-dial1 = Dial(master=frame_1, start=0, end=100, scroll_steps=1, color_gradient=("green", "cyan"),
-             text_color="white", text="Volume: ", unit_length=10, radius=50, command=on_volume_change)
-dial1.grid(padx=20, pady=20)
-dial1.set(20)
-
-dial2 = Dial(master=frame_1, start=0, end=1000, scroll_steps=10, color_gradient=("yellow", "white"),
-             text_color="white", text="Echo: ", unit_length=10, radius=50, command=on_echo_change)
-dial2.grid(padx=20, pady=20)
-dial2.set(250)
-
-dial4 = Dial(master=frame_1, color_gradient=("white", "pink"),
-             text_color="white", text="Decay: ", unit_length=10, radius=50, command=on_echo_decay_change)
-dial4.grid(row=1, column=1, padx=20, pady=20)
-dial4.set(75)
-
-initialized = False
 
 def on_output_select(choice):
     if not initialized:
@@ -141,6 +103,42 @@ def on_input_select(choice):
         callback=cb,
     )
     _stream.start()
+
+customtkinter.set_appearance_mode("Dark") 
+
+app = customtkinter.CTk()
+app_w = 650
+app_h = 400
+screen_w = app.winfo_screenwidth()
+screen_h = app.winfo_screenheight()
+app.geometry(f"{app_w}x{app_h}+{screen_w//2 - app_w//2}+{screen_h//2 - app_h//2}")
+# app.geometry(f"450+100")
+app.title("Guitar DSP")
+
+app.grid_columnconfigure(0, weight=1)
+app.grid_columnconfigure(1, weight=0)
+app.grid_rowconfigure(0, weight=1)
+
+frame_1 = customtkinter.CTkFrame(master=app)
+frame_1.grid(row=0, column=0, rowspan=2, columnspan=1, padx=20, pady=20, sticky='nsew')
+
+frame_2 = customtkinter.CTkFrame(master=app)
+frame_2.grid(row=0, column=1, rowspan=1, columnspan=1, padx=20, pady=20, sticky='nsew')
+
+dial1 = Dial(master=frame_1, start=0, end=100, scroll_steps=1, color_gradient=("green", "cyan"),
+             text_color="white", text="Volume: ", unit_length=10, radius=50, command=on_volume_change)
+dial1.grid(padx=20, pady=20)
+dial1.set(20)
+
+dial2 = Dial(master=frame_1, start=0, end=1000, scroll_steps=10, color_gradient=("yellow", "white"),
+             text_color="white", text="Echo: ", unit_length=10, radius=50, command=on_echo_change)
+dial2.grid(padx=20, pady=20)
+dial2.set(250)
+
+dial4 = Dial(master=frame_1, color_gradient=("white", "pink"),
+             text_color="white", text="Decay: ", unit_length=10, radius=50, command=on_echo_decay_change)
+dial4.grid(row=1, column=1, padx=20, pady=20)
+dial4.set(75)
 
 input_menu_label = customtkinter.CTkLabel(frame_2, text="input device: ", font=customtkinter.CTkFont())
 input_menu_label.grid(padx=20, pady=1)
