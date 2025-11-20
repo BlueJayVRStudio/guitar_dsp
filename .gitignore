@@ -2,4 +2,4 @@
 [Vv]env/
 [Pp]ending/
 __pycache__/
-**/ignore*.py
+**/ignore?*.py
