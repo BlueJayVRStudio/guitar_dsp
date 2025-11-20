@@ -12,6 +12,18 @@ Works great on **macOS** thanks to CoreAudio.
 
 This is a true weekend project. Expect weirdness.
 
+**Setup (Tested on Apple Silicon)**
+```bash
+cd path/to/project
+brew install python@3.13
+brew install python-tk@3.13
+python3.13 -m venv venv
+source ./venv/bin/activate
+pip install -r requirements.txt
+# then finally, to run the program:
+python main.py
+```
+
 **Attribution:**  
 This project uses the excellent [`sounddevice`](https://github.com/spatialaudio/python-sounddevice)
 library, which provides real-time audio I/O for Python by wrapping the
